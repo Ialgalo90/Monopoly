@@ -1,4 +1,4 @@
-package monopoly.model;
+package model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +11,7 @@ public class Jugador {
     private List<Propiedad> propiedades;
     private boolean enCarcel;
     private int turnosEnCarcel;
+    private int ultimaTirada = 0;
 
     public Jugador() {
         this.nombre = "";
@@ -83,6 +84,14 @@ public class Jugador {
 
     public void setTurnosEnCarcel(int turnosEnCarcel) {
         this.turnosEnCarcel = turnosEnCarcel;
+    }
+
+    public int getUltimaTirada() {
+        return ultimaTirada;
+    }
+
+    public void setUltimaTirada(int ultimaTirada) {
+        this.ultimaTirada = ultimaTirada;
     }
 
     @Override

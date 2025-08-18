@@ -1,4 +1,4 @@
-package monopoly.model;
+package model;
 
 public class CasillaIrCarcel extends Casilla {
     public CasillaIrCarcel() {

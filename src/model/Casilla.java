@@ -1,4 +1,4 @@
-package monopoly.model;
+package model;
 
 public abstract class Casilla {
 

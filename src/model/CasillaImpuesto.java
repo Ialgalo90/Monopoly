@@ -1,4 +1,4 @@
-package monopoly.model;
+package model;
 
 public class CasillaImpuesto extends Casilla {
    private int cantidad;

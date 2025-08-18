@@ -1,4 +1,4 @@
-package monopoly.model;
+package model;
 
 import java.util.Scanner;
 

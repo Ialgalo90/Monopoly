@@ -1,4 +1,4 @@
-package monopoly.model;
+package model;
 
 import java.util.Scanner;
 
@@ -24,48 +24,46 @@ public class CasillaCarcel extends Casilla {
                 case 1:
                     int dado1 = Dado.lanzar();
                     int dado2 = Dado.lanzar();
+                    int sumaDados = dado1 + dado2;
                     System.out.println(jugador.getNombre() + " lanza los dados: "+ dado1 + " y " + dado2);
                     if (dado1 == dado2) {
                         jugador.setEnCarcel(false);
                         jugador.setTurnosEnCarcel(0);
+                        jugador.setUltimaTirada(sumaDados);
                         System.out.println(jugador.getNombre() + " ha sacado dobles y sale de la cárcel.");
-
-                        // El jugador avanza con la suma de los dos dados
-                        int nuevaPosicion = ((jugador.getPosicion() + dado1 + dado2) % tablero.getCasillas().size());
-                        jugador.setPosicion(nuevaPosicion);
-
-                        System.out.println(jugador.getNombre() + " avanza a la casilla " + nuevaPosicion);
                     } else {
                         jugador.incrementarTurnosEnCarcel();
                         System.out.println("No sacó dobles. Turnos en cárcel: " + jugador.getTurnosEnCarcel());
 
-                        if (jugador.getTurnosEnCarcel() >= 3) {
-                            if (jugador.getDinero() >= 50) {
+                    if (jugador.getTurnosEnCarcel() >= 3) {
+                        if (jugador.getDinero() >= 50) {
                                 jugador.setDinero(jugador.getDinero() - 50);
                                 jugador.setEnCarcel(false);
                                 jugador.setTurnosEnCarcel(0);
+                                jugador.setUltimaTirada(sumaDados);
                                 System.out.println(jugador.getNombre() + " ha pagado la fianza después de 3 turnos y sale de la cárcel.");
-                            } else {
+                        } else {
                                 System.out.println(jugador.getNombre() + " no tiene sufiente dinero para pagar la fianza");
-                            }
                         }
                     }
-                    break;
+                }
+                break;
                 case 2:
-                        if (jugador.getDinero() >= 50) {
-                            jugador.setDinero(jugador.getDinero() - 50);
-                            jugador.setEnCarcel(false);
-                            jugador.setTurnosEnCarcel(0);
-                            System.out.println(jugador.getNombre() + " ha pagado la fianza y sale de la cárcel.");
-                            System.out.println(jugador.getNombre() + " ahora tiene " + jugador.getDinero() + " €");
-                        } else {
-                            System.out.println(jugador.getNombre() + " no tiene sufiente dinero para pagar la fianza");
-                        }
-                    break;
+                    if (jugador.getDinero() >= 50) {
+                        jugador.setDinero(jugador.getDinero() - 50);
+                        jugador.setEnCarcel(false);
+                        jugador.setTurnosEnCarcel(0);
+                        jugador.setUltimaTirada(0);
+                        System.out.println(jugador.getNombre() + " ha pagado la fianza y sale de la cárcel.");
+                        System.out.println(jugador.getNombre() + " ahora tiene " + jugador.getDinero() + " €");
+                    } else {
+                        System.out.println(jugador.getNombre() + " no tiene suficiente dinero para pagar la fianza");
+                    }
+                break;
                 default:
                     System.out.println("Opción no válida. Pierdes el turno.");
                     jugador.incrementarTurnosEnCarcel();
-                    break;
+                break;
             }
         } else {
             System.out.println(jugador.getNombre() + " solo está visitando la cárcel.");
