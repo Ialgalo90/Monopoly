@@ -1,4 +1,8 @@
-package model;
+package modelo.casillas;
+
+import modelo.jugador.Jugador;
+import modelo.enums.TipoCasilla;
+import modelo.tablero.Tablero;
 
 public class CasillaIrCarcel extends Casilla {
     public CasillaIrCarcel() {

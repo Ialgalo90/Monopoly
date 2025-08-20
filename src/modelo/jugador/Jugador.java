@@ -1,4 +1,9 @@
-package model;
+package modelo.jugador;
+
+import modelo.casillas.Casilla;
+import modelo.casillas.CasillaPropiedad;
+import modelo.tablero.Dado;
+import modelo.tablero.Tablero;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +13,7 @@ public class Jugador {
     private String nombre;
     private int posicion;
     private int dinero;
-    private List<Propiedad> propiedades;
+    private List<CasillaPropiedad> propiedades;
     private boolean enCarcel;
     private int turnosEnCarcel;
     private int ultimaTirada = 0;
@@ -30,7 +35,7 @@ public class Jugador {
         this.enCarcel = false;
     }
 
-    public Jugador(String nombre, int posicion, int dinero, List<Propiedad> propiedades, boolean enCarcel) {
+    public Jugador(String nombre, int posicion, int dinero, List<CasillaPropiedad> propiedades, boolean enCarcel) {
         this.nombre = nombre;
         this.posicion = posicion;
         this.dinero = dinero;
@@ -62,11 +67,11 @@ public class Jugador {
         this.dinero = dinero;
     }
 
-    public List<Propiedad> getPropiedades() {
+    public List<CasillaPropiedad> getPropiedades() {
         return propiedades;
     }
 
-    public void setPropiedades(List<Propiedad> propiedades) {
+    public void setPropiedades(List<CasillaPropiedad> propiedades) {
         this.propiedades = propiedades;
     }
 

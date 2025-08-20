@@ -1,4 +1,7 @@
-package model;
+package modelo.cartas;
+
+import modelo.jugador.Jugador;
+import modelo.tablero.Tablero;
 
 public class CartaIrCarcel extends CartaSorpresa {
 

@@ -1,15 +1,19 @@
-package model;
+package modelo.casillas;
+
+import modelo.jugador.Jugador;
+import modelo.enums.TipoCasilla;
+import modelo.tablero.Tablero;
 
 import java.util.Scanner;
 
-public class Propiedad extends Casilla {
+public class CasillaPropiedad extends Casilla {
 
     private int precio;
     private int rentaBase;
     private Jugador dueno;
     private int numCasas;
 
-    public Propiedad(String nombre, int precio, int rentaBase) {
+    public CasillaPropiedad(String nombre, int precio, int rentaBase) {
         super(nombre, TipoCasilla.PROPIEDAD);
         this.precio = precio;
         this.rentaBase = rentaBase;

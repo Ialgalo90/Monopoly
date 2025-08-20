@@ -1,4 +1,6 @@
-package model;
+package app;
+
+import controlador.Juego;
 
 public class Main {
     public static void main(String[] args) {

@@ -1,4 +1,10 @@
-package model;
+package controlador;
+
+import modelo.casillas.Casilla;
+import modelo.casillas.CasillaCarcel;
+import modelo.casillas.CasillaPropiedad;
+import modelo.jugador.Jugador;
+import modelo.tablero.Tablero;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -122,8 +128,8 @@ public class Juego {
 
         // Se libera las propiedades que podría tener el jugador
         for (Casilla c : tablero.getCasillas()) {
-            if (c instanceof Propiedad) {
-                Propiedad p = (Propiedad) c;
+            if (c instanceof CasillaPropiedad) {
+                CasillaPropiedad p = (CasillaPropiedad) c;
                 if (p.getDueno() == jugador) {
                     p.setDueno(null);
                 }

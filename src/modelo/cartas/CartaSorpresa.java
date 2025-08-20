@@ -1,6 +1,7 @@
-package model;
+package modelo.cartas;
 
-import java.util.List;
+import modelo.jugador.Jugador;
+import modelo.tablero.Tablero;
 
 public abstract class CartaSorpresa {
         private String descripcion;

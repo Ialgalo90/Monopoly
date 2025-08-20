@@ -1,4 +1,9 @@
-package model;
+package modelo.casillas;
+
+import modelo.cartas.CartaSorpresa;
+import modelo.jugador.Jugador;
+import modelo.enums.TipoCasilla;
+import modelo.tablero.Tablero;
 
 import java.util.ArrayList;
 import java.util.List;
