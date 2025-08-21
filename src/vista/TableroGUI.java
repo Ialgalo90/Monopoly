@@ -1,5 +1,6 @@
 package vista;
 
+import controlador.JuegoGUI;
 import modelo.casillas.Casilla;
 import modelo.jugador.Jugador;
 import modelo.tablero.Dado;
@@ -7,136 +8,368 @@ import modelo.tablero.Tablero;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 public class TableroGUI extends JFrame {
 
-    private JButton[] casillas;
+    private JButton[][] tableroVisual;
     private JButton botonLanzar;
-    private JLabel infoLabel;
+    private JLabel infoJugadorActual;
+    private JLabel infoDados;
+    private JTextArea logAcciones;
+    private JPanel panelJugadores;
 
+    private JuegoGUI controladorJuego;
     private Tablero tablero;
     private List<Jugador> jugadores;
     private int turnoActual = 0;
+
+    // Colores para cada jugador
+    private Color[] coloresJugadores = {
+        Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.MAGENTA, Color.ORANGE
+    };
+
+    // Mapeo del tablero (sentido horario)
+    private int[][] posicionesTablero = {
+        {5, 0}, {4, 0}, {3, 0}, {2, 0}, {1, 0}, {0, 0},     // Fila superior
+        {0, 1}, {0, 2}, {0, 3}, {0, 4}, {0, 5},             // Columna derecha
+        {1, 5}, {2, 5}, {3, 5}, {4, 5}, {5, 5},             // Fila inferior
+        {5, 4}, {5, 3}, {5, 2}, {5, 1}                      // Columna izquierda
+    };
 
     public TableroGUI(Tablero tablero, List<Jugador> jugadores) {
         this.tablero = tablero;
         this.jugadores = jugadores;
 
-        setTitle("Monopoly");
-        setSize(1200, 1200);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        configurarVentana();
+        inicializarComponentes();
+        actualizarTablero();
+    }
+
+    private void configurarVentana() {
+        setTitle("🎲 Monopoly - Juego Interactivo");
+        setSize(1000, 800);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Panel del Tablero
-        JPanel panelTablero = new JPanel(new GridLayout(6,6));
-        casillas = new JButton[36];
+        // Centrar ventana
+        setLocationRelativeTo(null);
+    }
 
-        for (int i = 0; i < 36; i++) {
-         casillas[i] = new JButton();
-         casillas[i].setEnabled(false);
-         panelTablero.add(casillas[i]);
+    private void inicializarComponentes() {
+        // Panel principal del tablero (6x6)
+        JPanel panelTablero = new JPanel(new GridLayout(6,6,2,2));
+        panelTablero.setBackground(new Color(34,139, 34));
+        panelTablero.setBorder(BorderFactory.createRaisedBevelBorder());
+
+        tableroVisual = new JButton[6][6];
+
+        // Inicializamos todas las casilla
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+                tableroVisual[i][j] = new JButton();
+                tableroVisual[i][j].setPreferredSize(new Dimension(120, 80));
+                tableroVisual[i][j].setFont(new  Font("Arial", Font.BOLD, 10));
+                tableroVisual[i][j].setBackground(Color.WHITE);
+                tableroVisual[i][j].setBorder(BorderFactory.createRaisedBevelBorder());
+                tableroVisual[i][j].setEnabled(false);
+                panelTablero.add(tableroVisual[i][j]);
+            }
         }
 
-        int[] indices = {
-                0, 1, 2, 3, 4, 5, // Arriba
-                11, 17, 23, // Derecha
-                30, 31, 32, 33, 34, 35, // Abajo
-                29, 23, 12, // Izquierda
-                6
-        };
+        // LLenamos el centro con logo/info
+        tableroVisual[2][2].setText("<html><center>🎲<br>MONOPOLY<br>🏠</center></html>");
+        tableroVisual[2][2].setBackground(new Color(220, 220, 220));
+        tableroVisual[2][3].setText("<html><center>💰<br>BANCO<br>🏦</center></html>");
+        tableroVisual[2][3].setBackground(new Color(220, 220, 220));
+        tableroVisual[3][2].setText("<html><center>🎯<br>JUEGO<br>🎮</center></html>");
+        tableroVisual[3][2].setBackground(new Color(220, 220, 220));
+        tableroVisual[3][3].setText("<html><center>🏆<br>WINNER<br>👑</center></html>");
+        tableroVisual[3][3].setBackground(new Color(220, 220, 220));
 
-        int[] borde = {
-                0, 1, 2, 3, 4, 5,     // fila superior
-                11, 17, 23, 29, 35,   // columna derecha
-                34, 33, 32, 31, 30,   // fila inferior
-                24, 18, 12, 6         // columna izquierda
-        };
+        // Panel lateral derecho para la información
+        JPanel panelInfo = new JPanel(new BorderLayout());
+        panelInfo.setPreferredSize(new Dimension(250,0));
+        panelInfo.setBorder(BorderFactory.createTitledBorder("Información del juego"));
 
-        for (int i = 0; i < tablero.getCasillas().size(); i++) {
-            int pos = borde[i];
-            casillas[pos].setText(tablero.getCasilla(i).getNombre());
-        }
+        // Info del jugador actual
+        infoJugadorActual = new JLabel("<html><b>Turno de:</b><br>" + jugadores.get(turnoActual).getNombre() + "</html>");
+        infoJugadorActual.setFont(new Font("Arial", Font.BOLD, 14));
+        infoJugadorActual.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
-        // El centro (Casilla 12) lo dejamos para un logo o texto
-        // casillas[14].setText("MONOPOLY");
-        // casillas[14].setEnabled(false);
+        // Info dados
+        infoDados = new JLabel("<html><b>Dados:</b><br>¡Lanza los dados!</html>");
+        infoDados.setFont(new Font("Arial", Font.BOLD, 12));
+        infoDados.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
-        // Panel inferior de info y botón lanzar Dados
-        JPanel panelInferior = new JPanel();
-        botonLanzar = new JButton("Lanzar Dados");
-        infoLabel = new JLabel("Turno de " + jugadores.get(turnoActual).getNombre());
+        // Botón lanzar dados
+        botonLanzar = new JButton("\uD83C\uDFB2 Lanzar Dados");
+        botonLanzar.setFont(new Font("Arial", Font.BOLD, 14));
+        botonLanzar.setPreferredSize(new Dimension(0, 50));
+        botonLanzar.setBackground(new Color(70, 130, 180));
+        botonLanzar.setForeground(Color.WHITE);
 
-        panelInferior.add(botonLanzar);
-        panelInferior.add(infoLabel);
+        // Panel Jugadores
+        panelJugadores = new JPanel();
+        panelJugadores.setLayout(new BoxLayout(panelJugadores, BoxLayout.Y_AXIS));
+        JScrollPane scrollJugadores = new JScrollPane(panelJugadores);
+        scrollJugadores.setPreferredSize(new Dimension(0,200));
+        scrollJugadores.setBorder(BorderFactory.createTitledBorder("Jugadores"));
 
+        // Log de acciones
+        logAcciones = new JTextArea(10,20);
+        logAcciones.setFont(new Font("Monospaced", Font.PLAIN, 11));
+        logAcciones.setEditable(false);
+        logAcciones.setBackground(new Color(248, 248, 248));
+        JScrollPane scrollLog = new JScrollPane(logAcciones);
+        scrollLog.setBorder(BorderFactory.createTitledBorder("Log de Acciones"));
+
+        // Ensamblar panel info
+        JPanel panelSuperior = new JPanel(new  BorderLayout());
+        panelSuperior.add(infoJugadorActual, BorderLayout.NORTH);
+        panelSuperior.add(infoDados, BorderLayout.CENTER);
+        panelSuperior.add(botonLanzar, BorderLayout.SOUTH);
+
+        panelInfo.add(panelSuperior, BorderLayout.NORTH);
+        panelInfo.add(scrollJugadores, BorderLayout.CENTER);
+        panelInfo.add(scrollLog, BorderLayout.SOUTH);
+
+        // Añadimos los componentes a la ventana
         add(panelTablero, BorderLayout.CENTER);
-        add(panelInferior, BorderLayout.SOUTH);
+        add(panelInfo, BorderLayout.EAST);
 
-        // Acción del botón lanzar Dados
-        botonLanzar.addActionListener(e -> lanzarDadosYAvanzar());
+        // Evento Listener
+        botonLanzar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                lanzarDadosYAvanzar();
+            }
+        });
 
-        actualizarTablero(indices);
+        actualizarPanelJugadores();
     }
 
     private void lanzarDadosYAvanzar() {
-        Jugador jugador = jugadores.get(turnoActual);
+        // Si tenemos controlador, delegar la lógica
+        if (controladorJuego != null) {
+            controladorJuego.ejecutarTurno();
 
+            // Actualizar la vista
+            this.jugadores = controladorJuego.getJugadores();
+            this.turnoActual = controladorJuego.getTurnoActual();
+
+            actualizarTablero();
+            actualizarPanelJugadores();
+
+            // Actualizar info del turno
+            if (!controladorJuego.juegoTerminado()) {
+                Jugador siguienteJugador = controladorJuego.getJugadorActual();
+                if (siguienteJugador != null) {
+                    infoJugadorActual.setText("<html><b>Turno de:</b><br>" +
+                            siguienteJugador.getNombre() + "</html>");
+                }
+            } else {
+                mostrarFinJuego();
+            }
+
+            return;
+        }
+
+        // LÓGICA ORIGINAL (para compatibilidad hacia atrás)
+        if (jugadores.isEmpty()) return;
+
+        Jugador jugadorActual = jugadores.get(turnoActual);
+
+        // Lanzar dados
         int dado1 = Dado.lanzar();
         int dado2 = Dado.lanzar();
         int total = dado1 + dado2;
 
-        infoLabel.setText(jugador.getNombre() + " ha sacado " + dado1 + " y " + dado2);
+        // Actualizar info dados
+        infoDados.setText("<html><b>Dados:</b><br>" +
+                "🎲 " + dado1 + " + 🎲 " + dado2 + " = " + total + "</html>");
 
-        jugador.avanzar(total, tablero);
+        // Log de acción
+        logAcciones.append(jugadorActual.getNombre() + " lanza dados: " +
+                dado1 + " + " + dado2 + " = " + total + "\n");
 
-        // Ejecuta la acción de la casilla si lo tiene
-        Casilla casillaActual = tablero.getCasilla(jugador.getPosicion());
-        casillaActual.ejecutarAccion(jugador, tablero);
+        // Mover jugador
+        int posicionAnterior = jugadorActual.getPosicion();
+        jugadorActual.avanzar(total, tablero);
 
+        // Log movimiento
+        Casilla casillaDestino = tablero.getCasilla(jugadorActual.getPosicion());
+        logAcciones.append("→ Se mueve a: " + casillaDestino.getNombre() + "\n");
 
-        int[] indices = {
-                0, 1, 2, 3, 4, 5, // Arriba
-                11, 17, 23, // Derecha
-                30, 31, 32, 33, 34, 35, // Abajo
-                29, 23, 12, // Izquierda
-                6
-        };
+        // Ejecutar acción de casilla (esto ya se hace en jugador.avanzar())
+        // casillaDestino.ejecutarAccion(jugadorActual, tablero);
 
-        // Se actualizar el tablero
-        actualizarTablero(indices);
+        // Actualizar tablero visual
+        actualizarTablero();
+        actualizarPanelJugadores();
 
-        // Cambia de turno
+        // Verificar si el juego terminó
+        if (juegoTerminado()) {
+            mostrarGanador();
+            return;
+        }
+
+        // Cambiar turno
         turnoActual = (turnoActual + 1) % jugadores.size();
-        infoLabel.setText("Turno de " + jugadores.get(turnoActual).getNombre());
+        infoJugadorActual.setText("<html><b>Turno de:</b><br>" +
+                jugadores.get(turnoActual).getNombre() + "</html>");
+
+        // Auto-scroll del log
+        logAcciones.setCaretPosition(logAcciones.getDocument().getLength());
+        logAcciones.append("\n");
     }
 
-    private void actualizarTablero(int[] indices) {
-        // Limpio todas las casillas
-        for (int i = 0; i < indices.length; i++) {
-            casillas[indices[i]].setText(tablero.getCasilla(i).getNombre());
+    private void actualizarTablero() {
+
+        // Limpiar el tablero visual
+        for (int i = 0; i < posicionesTablero.length; i++) {
+            int fila = posicionesTablero[i][0];
+            int col = posicionesTablero[i][1];
+
+            if (i < tablero.getCasillas().size()) {
+                Casilla casilla = tablero.getCasilla(i);
+                String nombreCasilla = casilla.getNombre();
+
+                // Acortar nombres muy largos
+                if (nombreCasilla.length() > 15) {
+                    nombreCasilla = nombreCasilla.substring(0, 12) + "...";
+                }
+
+                tableroVisual[fila][col].setText("<html><center>" + nombreCasilla + "</center></html>");
+
+                // Color según tipo de casilla
+                Color colorFondo = obtenerColorCasilla(casilla);
+                tableroVisual[fila][col].setBackground(colorFondo);
+            }
         }
 
-        // Pongo a los jugadores en su posición
-        for (Jugador j : jugadores) {
-            int posCasilla = indices[j.getPosicion()];
-            String texto = casillas[posCasilla].getText();
-            casillas[posCasilla].setText(texto + " [" + j.getNombre() + "]");
+        // Mostrar jugadores en sus posiciones
+        for (int i = 0; i < jugadores.size(); i++) {
+            Jugador jugador = jugadores.get(i);
+            int posicion = jugador.getPosicion();
+
+            if (posicion < posicionesTablero.length) {
+                int fila = posicionesTablero[posicion][0];
+                int col = posicionesTablero[posicion][1];
+
+                String textoActual = tableroVisual[fila][col].getText();
+                String jugadorTexto = "●";
+
+                // Añadir jugador al texto
+                if (textoActual.contains("</center></html>")) {
+                    textoActual = textoActual.replace("</center></html>", "<br><font color='" + obtenerColorHex(coloresJugadores[i % coloresJugadores.length]) + "'>" + jugadorTexto + "</font></center></html>");
+                } else {
+                    textoActual += " " + jugadorTexto;
+                }
+
+                tableroVisual[fila][col].setText(textoActual);
+            }
         }
     }
 
-    public static void main(String[] args) {
-        Tablero tablero = new Tablero();
-        tablero.inicializarCasillas();
+    private Color obtenerColorCasilla(Casilla casilla) {
+        switch (casilla.getTipo()) {
+            case SALIDA:
+                return new Color(144, 238, 144); // Verde claro
+            case PROPIEDAD:
+                return new Color(176, 196, 222); // Azul acero claro
+            case CARCEL:
+                return new Color(255, 160, 122); // Salmón claro
+            case IR_CARCEL:
+                return new Color(255, 99, 71);   // Tomate
+            case SORPRESA:
+                return new Color(255, 218, 185); // Durazno
+            case IMPUESTO:
+                return new Color(255, 192, 203); // Rosa
+            default:
+                return Color.WHITE;
+        }
+    }
 
-        Jugador j1 = new Jugador("Jugador 1");
-        Jugador j2 = new Jugador("Jugador 2");
+    private String obtenerColorHex(Color color) {
+        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+    }
 
-        tablero.setJugadores(List.of(j1, j2));
+    private void actualizarPanelJugadores() {
+        panelJugadores.removeAll();
 
-        SwingUtilities.invokeLater(() -> {
-            TableroGUI gui = new TableroGUI(tablero, tablero.getJugadores());
-            gui.setVisible(true);
-        });
+        for (int i = 0; i < jugadores.size(); i++) {
+            Jugador jugador = jugadores.get(i);
+
+            JPanel panelJugador = new JPanel(new BorderLayout());
+            panelJugador.setBorder(BorderFactory.createLineBorder(coloresJugadores[i % coloresJugadores.length], 2));
+            panelJugador.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+
+            // Indicador visual del color
+            JPanel indicadorColor = new JPanel();
+            indicadorColor.setBackground(coloresJugadores[i % coloresJugadores.length]);
+            indicadorColor.setPreferredSize(new Dimension(20, 0));
+
+            // Info del jugador
+            JLabel infoJugador = new JLabel("<html>" +
+                    "<b>" + jugador.getNombre() + "</b><br>" +
+                    "💰 " + jugador.getDinero() + "€<br>" +
+                    "🏠 " + jugador.getPropiedades().size() + " propiedades" +
+                    "</html>");
+            infoJugador.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+
+            panelJugador.add(indicadorColor, BorderLayout.WEST);
+            panelJugador.add(infoJugador, BorderLayout.CENTER);
+
+            // Resaltar jugador actual
+            if (i == turnoActual) {
+                panelJugador.setBackground(new Color(255,255,200));
+            } else {
+                panelJugador.setBackground(Color.WHITE);
+            }
+
+            panelJugadores.add(panelJugador);
+            panelJugadores.add(Box.createVerticalStrut(5));
+        }
+
+        panelJugadores.revalidate();
+        panelJugadores.repaint();
+    }
+
+    private boolean juegoTerminado() {
+        return jugadores.size() <= 1;
+    }
+
+    private void mostrarGanador() {
+        if (jugadores.size() == 1) {
+            Jugador ganador = jugadores.get(0);
+            logAcciones.append("🏆 ¡¡¡ GANADOR: " + ganador.getNombre() + " !!!\n");
+
+            JOptionPane.showMessageDialog(this,
+                    "🏆 ¡Felicidades!\n\n" + ganador.getNombre() + " ha ganado la partida!\n" +
+                            "💰 Dinero final: " + ganador.getDinero() + "€\n" +
+                            "🏠 Propiedades: " + ganador.getPropiedades().size(),
+                    "¡Fin del Juego!",
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
+
+        botonLanzar.setEnabled(false);
+        botonLanzar.setText("Juego Terminado");
+    }
+
+    private void mostrarFinJuego() {
+        botonLanzar.setEnabled(false);
+        botonLanzar.setText("Juego Terminado");
+        infoJugadorActual.setText("<html><b>🏆 Juego Terminado</b></html>");
+    }
+
+    // Método para agregar mensajes al log (usado por el controlador)
+    public void agregarMensajeLog(String mensaje) {
+        if (logAcciones != null) {
+            logAcciones.append(mensaje + "\n");
+            logAcciones.setCaretPosition(logAcciones.getDocument().getLength());
+        }
     }
 }
