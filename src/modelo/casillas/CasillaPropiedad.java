@@ -1,9 +1,12 @@
 package modelo.casillas;
 
+import controlador.Juego;
 import modelo.jugador.Jugador;
 import modelo.enums.TipoCasilla;
 import modelo.tablero.Tablero;
+import vista.DialogosJuego;
 
+import javax.swing.*;
 import java.util.Scanner;
 
 public class CasillaPropiedad extends Casilla {
@@ -55,35 +58,80 @@ public class CasillaPropiedad extends Casilla {
 
     @Override
     public void ejecutarAccion(Jugador jugador, Tablero tablero) {
+        // Busca la ventana activa para mostrar diálogos
+        JFrame ventanaPrincipal = encontrarVentanaPrincipal();
+
         if (dueno == null) {
-            System.out.println(jugador.getNombre() + " puede comprar " + getNombre() + " por " + getPrecio());
-            System.out.println("¿Quieres comprar " +  getNombre() + " por " + getPrecio() + "? Escríbe Si o No");
-            Scanner sc = new Scanner(System.in);
-            String opcion = sc.nextLine();
-            if (opcion.equalsIgnoreCase("Si")) {
-                if (jugador.getDinero() >= getPrecio()){
-                    jugador.setDinero(jugador.getDinero() - getPrecio());
-                    this.dueno = jugador;
-                    jugador.getPropiedades().add(this);
-                    System.out.println("El jugador " + jugador.getNombre() + " ha comprado " + getNombre());
-                    System.out.println("Dinero restante: " + jugador.getDinero());
-                } else {
-                    System.out.println("No tienes sufiente dinero para comprar esta propiedad.");
-                }
-            } else if (opcion.equalsIgnoreCase("No")) {
-                System.out.println(jugador.getNombre() + " decidió no comprar " + getNombre());
-            }
+            // Propiedad disponible para comprar
+            manejarCompra(jugador, ventanaPrincipal);
         } else if (dueno != jugador) {
-            if (jugador.getDinero() >= rentaBase){
-                jugador.setDinero(jugador.getDinero() - rentaBase);
-                dueno.setDinero(dueno.getDinero() + rentaBase);
-                System.out.println(jugador.getNombre() + " ha pagado " + rentaBase + " de renta a " + dueno.getNombre());
+            //Jugador debe pagar Renta
+            manejarPagoRenta(jugador, ventanaPrincipal);
+        } else {
+            // Es propiedad del jugador actual
+            DialogosJuego.mostrarInformacion("🏠 Tu Propiedad",
+                    jugador.getNombre() + " está en su propia propiedad: " + getNombre(),
+                    ventanaPrincipal);
+        }
+    }
+
+    private void manejarCompra(Jugador jugador, JFrame ventana) {
+        if (jugador.getDinero() >= precio) {
+            // Muestra el diálogo de compra
+            boolean quiereComprar = DialogosJuego.mostrarDialogoCompra(jugador, this, ventana);
+
+            if (quiereComprar) {
+                jugador.setDinero(jugador.getDinero() - precio);
+                this.dueno = jugador;
+                jugador.getPropiedades().add(this);
+
+                DialogosJuego.mostrarTransaccion("✅ Compra Realizada",
+                        jugador.getNombre() + " ha comprado " + getNombre(),
+                        -precio, jugador, ventana);
             } else {
-                System.out.println(jugador.getNombre() + " no tiene suficiente dinero para pagar la renta.");
-                // Añadir lógica de bancarrota más tarde
+                DialogosJuego.mostrarInformacion("❌ Compra Rechazada",
+                        jugador.getNombre() + " decidió no comprar " + getNombre(),
+                        ventana);
             }
         } else {
-            System.out.println(jugador.getNombre() + " está en su propia propiedad " + getNombre());
+            // No tiene suficiente dinero
+            DialogosJuego.mostrarAdvertencia("💸 Sin Dinero Suficiente",
+                    "No tienes suficiente dinero para comprar " + getNombre() + "\n\n" +
+                            "Precio: " + precio + "€\n" +
+                            "Tu dinero: " + jugador.getDinero() + "€",
+                    ventana);
+
         }
+    }
+
+    private void manejarPagoRenta(Jugador inquilino, JFrame ventana) {
+        if (inquilino.getDinero() >= rentaBase) {
+            // Puede pagar la renta
+            inquilino.setDinero(inquilino.getDinero() - rentaBase);
+            dueno.setDinero(dueno.getDinero() + rentaBase);
+
+            DialogosJuego.mostrarTransaccion("💰 Pago de Renta",
+                    inquilino.getNombre() + " paga " + rentaBase + "€ de renta a " + dueno.getNombre() +
+                            " por " + getNombre(),
+                    -rentaBase, inquilino, ventana);
+        } else {
+            // No puede pagar la renta
+            DialogosJuego.mostrarAdvertencia("⚠️ No Puedes Pagar la Renta",
+                    inquilino.getNombre() + " no tiene suficiente dinero para pagar la renta.\n\n" +
+                            "Renta: " + rentaBase + "€\n" +
+                            "Tu dinero: " + inquilino.getDinero() + "€\n\n" +
+                            "⚠️ Esto puede llevarte a la bancarrota.",
+                    ventana);
+        }
+    }
+
+    // Método auxiliar para encontrar la ventana principal activa
+    private JFrame encontrarVentanaPrincipal() {
+        for (java.awt.Window window : java.awt.Window.getWindows()) {
+            if (window instanceof JFrame && window.isVisible()) {
+                return (JFrame) window;
+            }
+        }
+        return null; // Si no encuentra ventana, los diálogos se mostrarán sin padre
     }
 }

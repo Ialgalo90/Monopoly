@@ -2,6 +2,9 @@ package modelo.cartas;
 
 import modelo.jugador.Jugador;
 import modelo.tablero.Tablero;
+import vista.DialogosJuego;
+
+import javax.swing.*;
 
 public class CartaCumpleanos extends CartaSorpresa {
     private int cantidad;
@@ -13,28 +16,45 @@ public class CartaCumpleanos extends CartaSorpresa {
 
     @Override
     public void ejecutarAccion(Jugador jugador, Tablero tablero) {
+        JFrame ventana = encontrarVentanaPrincipal();
         int totalCobrado = 0;
+        StringBuilder detalles = new StringBuilder();
 
-        System.out.println("🎉 ¡Es el cumpleaños de " + jugador.getNombre() + "!");
+        detalles.append("🎉 ¡Es el cumpleaños de ").append(jugador.getNombre()).append("!\n\n");
+        detalles.append("💰 Pagos recibidos:\n");
 
         for (Jugador j : tablero.getJugadores()) {
             if ( j != jugador) {
                 if (j.getDinero() >= cantidad) {
                     j.setDinero(j.getDinero() - cantidad);
                     totalCobrado += cantidad;
-                    System.out.println(j.getNombre() + " le da " + cantidad + "€ a " + jugador.getNombre());
+                    detalles.append("• ").append(j.getNombre()).append(": ").append(cantidad).append("€\n");
                 } else {
                     // Si no tiene suficiente dinero, da todo lo que tiene
                     int dineroDisponible = j.getDinero();
                     j.setDinero(0);
                     totalCobrado += dineroDisponible;
-                    System.out.println(j.getNombre() + " solo puede dar " + dineroDisponible + "€ (todo su dinero)");
+                    detalles.append("• ").append(j.getNombre()).append(": ").append(dineroDisponible).append("€ (todo su dinero)\n");
                 }
             }
         }
 
         // El jugador del cumpleaños recibe todo el dinero recaudado
         jugador.setDinero(jugador.getDinero() + totalCobrado);
-        System.out.println(jugador.getNombre() + " recibe un total de " + totalCobrado + "€ por su cumpleaños.");
+
+        detalles.append("\n💎 Total recibido: ").append(totalCobrado).append("€");
+        detalles.append("\n💰 Nuevo saldo: ").append(jugador.getDinero()).append("€");
+
+        DialogosJuego.mostrarInformacion("🎂 ¡Feliz Cumpleaños!",
+                detalles.toString(), ventana);
+    }
+
+    private JFrame encontrarVentanaPrincipal() {
+        for (java.awt.Window window : java.awt.Window.getWindows()) {
+            if (window instanceof JFrame && window.isVisible()) {
+                return (JFrame) window;
+            }
+        }
+        return null;
     }
 }

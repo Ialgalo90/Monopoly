@@ -3,6 +3,9 @@ package modelo.casillas;
 import modelo.jugador.Jugador;
 import modelo.enums.TipoCasilla;
 import modelo.tablero.Tablero;
+import vista.DialogosJuego;
+
+import javax.swing.*;
 
 public class CasillaImpuesto extends Casilla {
    private int cantidad;
@@ -22,7 +25,21 @@ public class CasillaImpuesto extends Casilla {
 
     @Override
     public void ejecutarAccion(Jugador jugador, Tablero tablero){
-        System.out.println(jugador.getNombre() + " debe pagar impuesto de " + cantidad);
+        JFrame ventana = encontrarVentanaPrincipal();
+
         jugador.setDinero(jugador.getDinero() - cantidad);
+
+        DialogosJuego.mostrarTransaccion("💸 Pago de Impuesto",
+                jugador.getNombre() + " debe pagar impuesto por " + getNombre(),
+                -cantidad, jugador, ventana);
+    }
+
+    private JFrame encontrarVentanaPrincipal() {
+        for (java.awt.Window window : java.awt.Window.getWindows()) {
+            if (window instanceof JFrame && window.isVisible()) {
+                return (JFrame) window;
+            }
+        }
+        return null;
     }
 }

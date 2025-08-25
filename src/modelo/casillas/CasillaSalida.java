@@ -3,6 +3,9 @@ package modelo.casillas;
 import modelo.jugador.Jugador;
 import modelo.enums.TipoCasilla;
 import modelo.tablero.Tablero;
+import vista.DialogosJuego;
+
+import javax.swing.*;
 
 public class CasillaSalida extends Casilla {
     private int premio;
@@ -27,11 +30,26 @@ public class CasillaSalida extends Casilla {
 
     @Override
     public void ejecutarAccion(Jugador jugador, Tablero tablero) {
+        JFrame ventana = encontrarVentanaPrincipal();
+
         if (premio > 0) {
-            System.out.println(jugador.getNombre() + " cobra " + premio + " por pasar por la salida.");
             jugador.setDinero(jugador.getDinero() + premio);
+            DialogosJuego.mostrarTransaccion("🎉 ¡Pasaste por la Salida!",
+                    jugador.getNombre() + " cobra por pasar por la salida.",
+                    premio, jugador, ventana);
         } else {
-            System.out.println(jugador.getNombre() + " está en " + getNombre());
+            DialogosJuego.mostrarInformacion("📍 En " + getNombre(),
+                    jugador.getNombre() + " está en " + getNombre(),
+                    ventana);
         }
+    }
+
+    private JFrame encontrarVentanaPrincipal() {
+        for (java.awt.Window window : java.awt.Window.getWindows()) {
+            if (window instanceof JFrame && window.isVisible()) {
+                return (JFrame) window;
+            }
+        }
+        return null;
     }
 }
